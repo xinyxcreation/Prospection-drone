@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#e00012">
+<meta name="description" content="Prospection Drone — suivi des agences immobilières et diagnostiqueurs autour de Châteaubriant.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg">
+<link rel="stylesheet" href="style.css">
+<title>Prospection Drone</title>
+</head>
+<body>
+<header class="app-header">
+  <div>
+    <h1>Prospection Drone</h1>
+    <small id="updated">Suivi commercial</small>
+  </div>
+  <div class="header-actions">
+    <button id="exportBtn" class="icon-btn" title="Exporter">⇩</button>
+    <button id="importBtn" class="icon-btn" title="Importer">⇧</button>
+    <input id="importFile" type="file" accept=".json,application/json" hidden>
+  </div>
+</header>
+
+<nav class="tabs" aria-label="Type de prospection">
+  <button class="tab active" data-tab="agencies">🏠 Agences immobilières</button>
+  <button class="tab" data-tab="diagnosticians">🔎 Diagnostiqueurs</button>
+</nav>
+
+<main>
+  <section id="dashboard" class="dashboard"></section>
+
+  <section class="toolbar">
+    <div class="search-wrap">
+      <span>⌕</span>
+      <input id="search" type="search" placeholder="Rechercher une entreprise…">
+    </div>
+    <select id="statusFilter" aria-label="Filtrer par statut">
+      <option value="all">Tous les statuts</option>
+      <option value="attention">🟠 En attention</option>
+      <option value="accepted">🟢 Accord</option>
+      <option value="refused">🔴 Refus</option>
+      <option value="never">⚪ Jamais visité</option>
+    </select>
+    <button id="addBtn" class="primary">＋ Ajouter</button>
+  </section>
+
+  <section id="prospects" class="grid"></section>
+</main>
+
+<div id="modal" class="modal hidden" aria-hidden="true">
+  <div class="modal-backdrop" data-close="1"></div>
+  <div class="modal-panel">
+    <div class="modal-head">
+      <div>
+        <span id="modalType" class="eyebrow"></span>
+        <h2 id="modalTitle"></h2>
+        <p id="modalLocation" class="muted"></p>
+      </div>
+      <button id="closeModal" class="close-btn">×</button>
+    </div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<template id="cardTemplate">
+<article class="prospect-card">
+  <div class="card-head">
+    <div class="avatar"></div>
+    <div class="card-title">
+      <h2></h2>
+      <p class="city"></p>
+    </div>
+    <span class="status-pill"></span>
+  </div>
+  <div class="card-metrics">
+    <span>📅 <b class="visits"></b> visite(s)</span>
+    <span>🪪 <b class="cards"></b> carte(s)</span>
+    <span>🧾 <b class="quotes"></b> devis</span>
+  </div>
+  <div class="card-footer">
+    <span class="last-visit"></span>
+    <button class="details-btn">Détails →</button>
+  </div>
+</article>
+</template>
+
+<script src="app.js"></script>
+</body>
+</html>
