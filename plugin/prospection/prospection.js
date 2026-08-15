@@ -93,7 +93,14 @@ function renderStats(){
   if(s){
     s.innerHTML=html;
     s.querySelectorAll('[data-prospection-filter]').forEach(btn=>{
-      btn.onclick=()=>{quickFilter=btn.dataset.prospectionFilter;render()};
+      btn.onclick=(e)=>{
+        e.preventDefault();
+        e.stopPropagation();
+        quickFilter=btn.dataset.prospectionFilter||'all';
+        const select=$('#prospectionDisplayFilter',container);
+        if(select) select.value='all';
+        render();
+      };
     });
   }
 }
@@ -101,15 +108,23 @@ function renderStats(){
 function renderList(){
   const list=current();
   const q=(($('#prospectionSearch',container)?.value)||'').trim().toLowerCase();
-  const distance=Number($('#prospectionDistance',container)?.value||100);
+  const distance=Number($('#prospectionDistance',container)?.value||10);
+  const displayFilter=$('#prospectionDisplayFilter',container)?.value||'all';
   const filter=quickFilter;
   const filtered=list.filter(p=>{
     const hay=`${p.name} ${p.city} ${p.address}`.toLowerCase();
     if(q&&!hay.includes(q))return false;
     if(Number(p.distance)>distance)return false;
     const [st]=status(p);
-    if(filter==='fav'&&!ensureProspectState(p).favorite)return false;
-    if(filter==='quotes'&&quoteCount(p)<1)return false;
+    const isFav=ensureProspectState(p).favorite;
+    const isQuote=quoteCount(p)>0;
+    // "Afficher" is the main select filter.
+    if(displayFilter==='fav'&&!isFav)return false;
+    if(displayFilter==='quotes'&&!isQuote)return false;
+    if(displayFilter!=='all'&&displayFilter!=='fav'&&displayFilter!=='quotes'&&displayFilter!==st)return false;
+    // Quick filters are also active; selecting a quick filter narrows the result.
+    if(filter==='fav'&&!isFav)return false;
+    if(filter==='quotes'&&!isQuote)return false;
     if(filter!=='all'&&filter!=='fav'&&filter!=='quotes'&&filter!==st)return false;
     return true;
   }).sort((a,b)=>Number(a.distance)-Number(b.distance)||a.name.localeCompare(b.name,'fr'));
@@ -164,7 +179,26 @@ function shell(){
       <div class="prospection-location">📍 Rayon de prospection · Châteaubriant</div>
     </div>
     <div class="prospection-toolbar">
-      <label>Distance<select id="prospectionDistance"><option value="10" selected>10 km</option><option value="20">20 km</option><option value="30">30 km</option><option value="50">50 km</option><option value="100">100 km</option></select></label>
+      <label>Distance
+        <select id="prospectionDistance">
+          <option value="10" selected>10 km</option>
+          <option value="20">20 km</option>
+          <option value="30">30 km</option>
+          <option value="50">50 km</option>
+          <option value="100">100 km</option>
+        </select>
+      </label>
+      <label>Afficher
+        <select id="prospectionDisplayFilter">
+          <option value="all" selected>🏢 Tous</option>
+          <option value="todo">📞 À visiter</option>
+          <option value="attention">🟠 En attention</option>
+          <option value="accepted">🟢 Accord</option>
+          <option value="refused">🔴 Refus</option>
+          <option value="fav">⭐ Favoris</option>
+          <option value="quotes">🧾 Devis</option>
+        </select>
+      </label>
     </div>
     <input id="prospectionSearch" class="prospection-search" type="search" placeholder="Rechercher une entreprise…">
     <div id="prospectionStats" class="stats"></div>
@@ -173,6 +207,7 @@ function shell(){
   </section>`;
   $('#prospectionSearch').oninput=renderList;
   $('#prospectionDistance').onchange=renderList;
+  $('#prospectionDisplayFilter').onchange=()=>{quickFilter='all';render()};
   quickFilter='all';
   $('#prospectionStockEdit').onclick=editStock;
 }
