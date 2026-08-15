@@ -11,3 +11,20 @@
 .prospection-toolbar{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .prospection-search{display:block;margin-top:0}
 @media(max-width:700px){.prospection-toolbar{grid-template-columns:1fr 1fr}.prospection-search{grid-column:auto}}
+
+/* v8: Event filters — Distance and Afficher side by side; search below */
+.event-main-filters{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+  gap:8px !important;
+  align-items:end !important;
+}
+.event-main-filters > label{min-width:0}
+#eventSearch{
+  display:block !important;
+  width:100% !important;
+  margin-top:8px !important;
+}
+@media(max-width:700px){
+  .event-main-filters{grid-template-columns:1fr 1fr !important}
+}

@@ -40,7 +40,7 @@ function status(p){
   const v=lastVisit(p);
   if(!v)return ['todo','Jamais visité'];
   if(v.status==='accepted')return ['accepted','Accord'];
-  if(v.status==='attention')return ['attention','En attention'];
+  if(v.status==='attention')return ['attention','En attente'];
   return ['refused','Refus'];
 }
 function totalCardsGiven(){
@@ -82,7 +82,7 @@ function renderStats(){
   const quick=[
     ['all','🏢',list.length,'Tous'],
     ['todo','📞',list.filter(p=>status(p)[0]==='todo').length,'À visiter'],
-    ['attention','🟠',att,'En attention'],
+    ['attention','🟠',att,'En attente'],
     ['accepted','🟢',a,'Accord'],
     ['refused','🔴',r,'Refus'],
     ['fav','⭐',list.filter(p=>ensureProspectState(p).favorite).length,'Favoris'],
@@ -192,7 +192,7 @@ function shell(){
         <select id="prospectionDisplayFilter">
           <option value="all" selected>🏢 Tous</option>
           <option value="todo">📞 À visiter</option>
-          <option value="attention">🟠 En attention</option>
+          <option value="attention">🟠 En attente</option>
           <option value="accepted">🟢 Accord</option>
           <option value="refused">🔴 Refus</option>
           <option value="fav">⭐ Favoris</option>
@@ -234,7 +234,7 @@ function openVisit(p){
 
 function openDetails(p){
   const ps=ensureProspectState(p);
-  const visits=ps.visits.slice().reverse().map(v=>`${fmtDate(v.date)} — ${v.status==='accepted'?'Accord':v.status==='attention'?'En attention':'Refus'} — ${v.cardsGiven||0} carte(s)${v.note?` — ${v.note}`:''}`).join('\n')||'Aucune visite';
+  const visits=ps.visits.slice().reverse().map(v=>`${fmtDate(v.date)} — ${v.status==='accepted'?'Accord':v.status==='attention'?'En attente':'Refus'} — ${v.cardsGiven||0} carte(s)${v.note?` — ${v.note}`:''}`).join('\n')||'Aucune visite';
   const quotes=ps.quotes.slice().reverse().map(v=>`${fmtDate(v.date)}${v.amount?` — ${v.amount} €`:''}${v.note?` — ${v.note}`:''}`).join('\n')||'Aucune demande de devis';
   const action=prompt(
 `${p.name}
