@@ -7,6 +7,7 @@ const LAST_UPDATE='12:48';
 let data={agencies:[],diagnosticians:[],cardsInitial:500};
 let type='agencies';
 let container=null;
+let quickFilter='all';
 
 const $=(s,c=document)=>c.querySelector(s);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
@@ -78,30 +79,38 @@ function renderStats(){
   const att=list.reduce((n,p)=>n+(status(p)[0]==='attention'?1:0),0);
   const r=list.reduce((n,p)=>n+(status(p)[0]==='refused'?1:0),0);
   const q=list.reduce((n,p)=>n+quoteCount(p),0);
-  const html=[
-    ['🏢',list.length],
-    ['📅',v],
-    ['🟢',a],
-    ['🟠',att],
-    ['🧾',q],
-    ['🪪',stock()]
-  ].map(([i,n])=>`<div class="stat"><span class="stat-icon">${i}</span><span>${n}</span></div>`).join('');
+  const quick=[
+    ['all','🏢',list.length,'Tous'],
+    ['todo','📞',list.filter(p=>status(p)[0]==='todo').length,'À visiter'],
+    ['attention','🟠',att,'En attention'],
+    ['accepted','🟢',a,'Accord'],
+    ['refused','🔴',r,'Refus'],
+    ['fav','⭐',list.filter(p=>ensureProspectState(p).favorite).length,'Favoris'],
+    ['quotes','🧾',q,'Devis']
+  ];
+  const html=quick.map(([f,i,n,label])=>`<button type="button" class="stat ${quickFilter===f?'active':''}" data-prospection-filter="${f}"><span class="stat-icon">${i}</span><span>${n}</span><small>${label}</small></button>`).join('');
   const s=$('#prospectionStats',container);
-  if(s)s.innerHTML=html;
+  if(s){
+    s.innerHTML=html;
+    s.querySelectorAll('[data-prospection-filter]').forEach(btn=>{
+      btn.onclick=()=>{quickFilter=btn.dataset.prospectionFilter;render()};
+    });
+  }
 }
 
 function renderList(){
   const list=current();
   const q=(($('#prospectionSearch',container)?.value)||'').trim().toLowerCase();
   const distance=Number($('#prospectionDistance',container)?.value||100);
-  const filter=$('#prospectionFilter',container)?.value||'all';
+  const filter=quickFilter;
   const filtered=list.filter(p=>{
     const hay=`${p.name} ${p.city} ${p.address}`.toLowerCase();
     if(q&&!hay.includes(q))return false;
     if(Number(p.distance)>distance)return false;
     const [st]=status(p);
     if(filter==='fav'&&!ensureProspectState(p).favorite)return false;
-    if(filter!=='all'&&filter!=='fav'&&filter!==st)return false;
+    if(filter==='quotes'&&quoteCount(p)<1)return false;
+    if(filter!=='all'&&filter!=='fav'&&filter!=='quotes'&&filter!==st)return false;
     return true;
   }).sort((a,b)=>Number(a.distance)-Number(b.distance)||a.name.localeCompare(b.name,'fr'));
 
@@ -156,7 +165,6 @@ function shell(){
     </div>
     <div class="prospection-toolbar">
       <label>Distance<select id="prospectionDistance"><option value="10" selected>10 km</option><option value="20">20 km</option><option value="30">30 km</option><option value="50">50 km</option><option value="100">100 km</option></select></label>
-      <label>Afficher<select id="prospectionFilter"><option value="all">Tous</option><option value="todo">📞 À visiter</option><option value="attention">🟠 En attention</option><option value="accepted">🟢 Accord</option><option value="refused">🔴 Refus</option><option value="fav">⭐ Favoris</option></select></label>
     </div>
     <input id="prospectionSearch" class="prospection-search" type="search" placeholder="Rechercher une entreprise…">
     <div id="prospectionStats" class="stats"></div>
@@ -165,7 +173,7 @@ function shell(){
   </section>`;
   $('#prospectionSearch').oninput=renderList;
   $('#prospectionDistance').onchange=renderList;
-  $('#prospectionFilter').onchange=renderList;
+  quickFilter='all';
   $('#prospectionStockEdit').onclick=editStock;
 }
 

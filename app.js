@@ -1219,6 +1219,12 @@ function render() {
     distanceElement.value
   );
 
+  const searchElement =
+  $('#eventSearch');
+
+  const search =
+  (searchElement?.value || '').trim().toLowerCase();
+
 
   const filter =
   filterElement.value;
@@ -1248,8 +1254,14 @@ function render() {
 
   let list =
   events.filter(
-    e =>
-    Number(e.distance) <= max
+    e => {
+      if(Number(e.distance) > max) return false;
+      if(search){
+        const hay = `${e.title||''} ${e.name||''} ${e.city||''} ${e.location||''} ${e.address||''}`.toLowerCase();
+        if(!hay.includes(search)) return false;
+      }
+      return true;
+    }
   );
 
 
@@ -2042,6 +2054,17 @@ $('#statusFilter');
 if (statusElement) {
 
   statusElement.onchange =
+  render;
+}
+
+
+const eventSearchElement =
+$('#eventSearch');
+
+
+if (eventSearchElement) {
+
+  eventSearchElement.oninput =
   render;
 }
 
