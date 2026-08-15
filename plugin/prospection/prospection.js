@@ -100,7 +100,8 @@ function renderList(){
     if(q&&!hay.includes(q))return false;
     if(Number(p.distance)>distance)return false;
     const [st]=status(p);
-    if(filter!=='all'&&filter!==st)return false;
+    if(filter==='fav'&&!ensureProspectState(p).favorite)return false;
+    if(filter!=='all'&&filter!=='fav'&&filter!==st)return false;
     return true;
   }).sort((a,b)=>Number(a.distance)-Number(b.distance)||a.name.localeCompare(b.name,'fr'));
 
@@ -150,14 +151,14 @@ function render(){
 function shell(){
   container.innerHTML=`<section class="prospection-page">
     <div class="prospection-intro">
-      <div class="prospection-title"><span>${type==='agencies'?'🏠':'🔎'}</span><div><strong>${type==='agencies'?'Agences immobilières':'Diagnostiqueurs immobiliers'}</strong><small>Prospection autour de Châteaubriant</small></div></div>
+      <div class="prospection-title"><span>${type==='agencies'?'🏠':'🔎'}</span><div><strong>${type==='agencies'?'Agences immobilières':'Diagnostiqueurs immobiliers'}</strong></div></div>
       <div class="prospection-location">📍 Rayon de prospection · Châteaubriant</div>
     </div>
     <div class="prospection-toolbar">
-      <input id="prospectionSearch" type="search" placeholder="Rechercher une entreprise…">
-      <select id="prospectionDistance"><option value="10">10 km</option><option value="20">20 km</option><option value="30">30 km</option><option value="50">50 km</option><option value="100" selected>100 km</option></select>
-      <select id="prospectionFilter"><option value="all">Tous</option><option value="todo">Jamais visité</option><option value="attention">En attention</option><option value="accepted">Accord</option><option value="refused">Refus</option></select>
+      <label>Distance<select id="prospectionDistance"><option value="10" selected>10 km</option><option value="20">20 km</option><option value="30">30 km</option><option value="50">50 km</option><option value="100">100 km</option></select></label>
+      <label>Afficher<select id="prospectionFilter"><option value="all">Tous</option><option value="todo">📞 À visiter</option><option value="attention">🟠 En attention</option><option value="accepted">🟢 Accord</option><option value="refused">🔴 Refus</option><option value="fav">⭐ Favoris</option></select></label>
     </div>
+    <input id="prospectionSearch" class="prospection-search" type="search" placeholder="Rechercher une entreprise…">
     <div id="prospectionStats" class="stats"></div>
     <div class="prospection-stockbar"><span>🪪 Stock cartes : <strong id="prospectionStockValue">${stock()}</strong></span><button id="prospectionStockEdit">Modifier le stock</button></div>
     <div id="prospectionList"></div>
