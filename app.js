@@ -46,6 +46,13 @@ function loadState(){
     const s=JSON.parse(raw);
     s.settings ||= {cardsStock:DEFAULT_CARDS};
     s.agencies ||= []; s.diagnosticians ||= [];
+    // Migration : la première version pouvait avoir enregistré une base vide.
+    // Dans ce cas on charge la base initiale de prospection.
+    if(s.agencies.length===0 && s.diagnosticians.length===0){
+      const fresh=blankState();
+      fresh.settings.cardsStock = Number.isFinite(Number(s.settings.cardsStock)) ? Number(s.settings.cardsStock) : DEFAULT_CARDS;
+      return fresh;
+    }
     return s;
   }catch(e){ return blankState(); }
 }
