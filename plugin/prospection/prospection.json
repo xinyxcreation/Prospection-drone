@@ -1,0 +1,233 @@
+{
+  "generatedAt": "2026-08-15T12:48:00+02:00",
+  "center": {
+    "name": "Châteaubriant",
+    "lat": 47.718,
+    "lon": -1.376
+  },
+  "agencies": [
+    {
+      "id": "ag-adr-chateaubriant",
+      "name": "l'Adresse Châteaubriant",
+      "city": "Châteaubriant",
+      "address": "28 Rue Aristide Briand",
+      "distance": 1.0,
+      "potential": 3,
+      "favorite": false,
+      "visits": [],
+      "quotes": []
+    },
+    {
+      "id": "ag-ajp-chateaubriant",
+      "name": "AJP Immobilier Châteaubriant",
+      "city": "Châteaubriant",
+      "address": "40 Rue du 11 Novembre 1918",
+      "distance": 1.1,
+      "potential": 3,
+      "favorite": false,
+      "visits": [],
+      "quotes": []
+    },
+    {
+      "id": "ag-saint-nicolas",
+      "name": "Saint Nicolas Immobilier",
+      "city": "Châteaubriant",
+      "address": "10 bis Rue Joseph Chapron",
+      "distance": 1.2,
+      "potential": 2,
+      "favorite": false,
+      "visits": [],
+      "quotes": []
+    },
+    {
+      "id": "ag-orpi-provost",
+      "name": "Orpi Provost Immobilier Châteaubriant",
+      "city": "Châteaubriant",
+      "address": "17 Bd Victor Hugo",
+      "distance": 1.0,
+      "potential": 3,
+      "favorite": false,
+      "visits": [],
+      "quotes": []
+    },
+    {
+      "id": "ag-porte-neuve",
+      "name": "Porte Neuve Immobilier",
+      "city": "Châteaubriant",
+      "address": "2 Rue Aristide Briand",
+      "distance": 1.0,
+      "potential": 2,
+      "favorite": false,
+      "visits": [],
+      "quotes": []
+    },
+    {
+      "id": "ag-century21",
+      "name": "CENTURY 21 Iméo",
+      "city": "Châteaubriant",
+      "address": "8 Pl. Saint-Nicolas",
+      "distance": 1.0,
+      "potential": 3,
+      "favorite": false,
+      "visits": [],
+      "quotes": []
+    },
+    {
+      "id": "ag-square-habitat",
+      "name": "Square Habitat Châteaubriant",
+      "city": "Châteaubriant",
+      "address": "10 Pl. de la Motte",
+      "distance": 1.2,
+      "potential": 3,
+      "favorite": false,
+      "visits": [],
+      "quotes": []
+    },
+    {
+      "id": "ag-decoq",
+      "name": "De Coquereaumont Immobilier",
+      "city": "Châteaubriant",
+      "address": "8 Bd Victor Hugo",
+      "distance": 1.1,
+      "potential": 2,
+      "favorite": false,
+      "visits": [],
+      "quotes": []
+    },
+    {
+      "id": "ag-laforet",
+      "name": "Laforêt Châteaubriant",
+      "city": "Châteaubriant",
+      "address": "1 Pl. de la Motte",
+      "distance": 1.2,
+      "potential": 3,
+      "favorite": false,
+      "visits": [],
+      "quotes": []
+    },
+    {
+      "id": "ag-jerome",
+      "name": "Jerome Immobilier Châteaubriant",
+      "city": "Châteaubriant",
+      "address": "19 Bd Victor Hugo",
+      "distance": 1.3,
+      "potential": 2,
+      "favorite": false,
+      "visits": [],
+      "quotes": []
+    },
+    {
+      "id": "ag-pacome",
+      "name": "Pacôme Briand - Agent immobilier",
+      "city": "Châteaubriant",
+      "address": "9 Rue Amand Franco",
+      "distance": 1.4,
+      "potential": 2,
+      "favorite": false,
+      "visits": [],
+      "quotes": []
+    },
+    {
+      "id": "ag-nomari",
+      "name": "Georges-Henri NOMARI - Expert Immobilier",
+      "city": "Châteaubriant",
+      "address": "3 Rue Kléber",
+      "distance": 1.5,
+      "potential": 2,
+      "favorite": false,
+      "visits": [],
+      "quotes": []
+    },
+    {
+      "id": "ag-nozay-1",
+      "name": "Agence immobilière Nozay",
+      "city": "Nozay",
+      "address": "",
+      "distance": 24.0,
+      "potential": 2,
+      "favorite": false,
+      "visits": [],
+      "quotes": []
+    },
+    {
+      "id": "ag-ried",
+      "name": "Agence immobilière Rougé",
+      "city": "Rougé",
+      "address": "",
+      "distance": 10.0,
+      "potential": 2,
+      "favorite": false,
+      "visits": [],
+      "quotes": []
+    },
+    {
+      "id": "ag-pouance",
+      "name": "Agence immobilière Pouancé",
+      "city": "Pouancé",
+      "address": "",
+      "distance": 18.0,
+      "potential": 2,
+      "favorite": false,
+      "visits": [],
+      "quotes": []
+    }
+  ],
+  "diagnosticians": [
+    {
+      "id": "di-ld2i",
+      "name": "LD2i - Diagnostic immobilier",
+      "city": "Châteaubriant",
+      "address": "",
+      "distance": 1.5,
+      "potential": 3,
+      "favorite": false,
+      "visits": [],
+      "quotes": []
+    },
+    {
+      "id": "di-petit-diagnostiqueur",
+      "name": "Le Petit Diagnostiqueur",
+      "city": "Erbray",
+      "address": "",
+      "distance": 5.0,
+      "potential": 3,
+      "favorite": false,
+      "visits": [],
+      "quotes": []
+    },
+    {
+      "id": "di-1",
+      "name": "Diagnostiqueur immobilier Châteaubriant",
+      "city": "Châteaubriant",
+      "address": "",
+      "distance": 2.0,
+      "potential": 2,
+      "favorite": false,
+      "visits": [],
+      "quotes": []
+    },
+    {
+      "id": "di-2",
+      "name": "Diagnostiqueur immobilier Nozay",
+      "city": "Nozay",
+      "address": "",
+      "distance": 24.0,
+      "potential": 2,
+      "favorite": false,
+      "visits": [],
+      "quotes": []
+    },
+    {
+      "id": "di-3",
+      "name": "Diagnostiqueur immobilier Pouancé",
+      "city": "Pouancé",
+      "address": "",
+      "distance": 18.0,
+      "potential": 2,
+      "favorite": false,
+      "visits": [],
+      "quotes": []
+    }
+  ],
+  "cardsInitial": 500
+}

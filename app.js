@@ -1,273 +1,2092 @@
-const KEY = "prospection-drone-v1";
-const DEFAULT_CARDS = 100;
+/* =========================================================
+ E VENT-D*RONE
+ Sauvegarde synchronisée Supabase
+ Identifiant unique : event-drone-dronix
+ ========================================================= */
 
-let state = loadState();
-let currentTab = "agencies";
-let currentId = null;
+const STORAGE = 'events-drone-user-v5';
+const DISPLAY_EVENT_COUNT = 6620;
+const DISPLAY_UPDATE_TIME = '12:48';
 
-const $ = id => document.getElementById(id);
+const SUPABASE_URL =
+'https://bqfeuzynjeofcwqqlcgw.supabase.co';
 
-function uid(){ return crypto.randomUUID ? crypto.randomUUID() : Date.now()+"-"+Math.random(); }
-function today(){ return new Date().toISOString().slice(0,10); }
-function fmtDate(d){
-  if(!d) return "Jamais";
-  return new Intl.DateTimeFormat("fr-FR",{dateStyle:"short"}).format(new Date(d+"T12:00:00"));
+const SUPABASE_KEY =
+'sb_publishable_w68t2Dfy6yCyCtOltOFDcQ_Et3nMBE5';
+
+const SUPABASE_TABLE =
+'event_drone_user_data';
+
+const USER_ID =
+'event-drone-dronix';
+
+const LEARN_THRESHOLD = 3;
+
+let events = [];
+
+let learningCache = null;
+let potentialCache = new Map();
+
+let cloudReady = false;
+let cloudSyncPromise = null;
+
+
+/* =========================================================
+ F ALLBAC*K
+ ========================================================= */
+
+const fallback = [
+  {
+    id: 'local-1',
+    date: '2026-08-23',
+    title: 'Fanfare Tzila Brass',
+    place: 'Châteaubriant',
+    distance: 1,
+    description: 'Animation musicale en plein air.',
+    outdoor: true,
+    droneScore: 8,
+    dronePotential: 'high'
+  },
+
+{
+  id: 'local-2',
+  date: '2026-08-28',
+  title: 'Ciné plein-air – Un p’tit truc en plus',
+  place: 'Châteaubriant',
+  distance: 1,
+  address: 'Promenade du Duc d’Aumale',
+  startTime: '21:00',
+  description: 'Projection en plein air.',
+  outdoor: true,
+  droneScore: 10,
+  dronePotential: 'high'
+},
+
+{
+  id: 'local-3',
+  date: '2026-08-29',
+  title: 'Forum des associations',
+  place: 'Châteaubriant',
+  distance: 1,
+  address: 'Halle de Béré',
+  description: 'Près de 100 associations.',
+  outdoor: true,
+  droneScore: 8,
+  dronePotential: 'high'
+},
+
+{
+  id: 'local-4',
+  date: '2026-09-05',
+  title: 'Nozay s’Expose !',
+  place: 'Nozay',
+  distance: 25,
+  description:
+  'Artisans, associations, braderie, vide-grenier et animations.',
+  outdoor: true,
+  droneScore: 10,
+  dronePotential: 'high'
+},
+
+{
+  id: 'local-5',
+  date: '2026-09-06',
+  title: 'Vide-grenier',
+  place: 'Châteaubriant',
+  distance: 1,
+  address: 'Halle de Béré',
+  description: 'Vide-grenier.',
+  outdoor: true,
+  droneScore: 8,
+  dronePotential: 'high'
+},
+
+{
+  id: 'local-6',
+  date: '2026-09-06',
+  title: 'Vide-grenier + fête des résidents',
+  place: 'Pouancé / Ombrée d’Anjou',
+  distance: 20,
+  description: 'Animations locales.',
+  outdoor: true,
+  droneScore: 10,
+  dronePotential: 'high'
+},
+
+{
+  id: 'local-7',
+  date: '2026-09-06',
+  title: 'Route 44 et ses motards',
+  place: 'Sion-les-Mines',
+  distance: 18,
+  description: 'Rassemblement / vide-grenier.',
+  outdoor: true,
+  droneScore: 10,
+  dronePotential: 'high'
 }
-function esc(s=""){ return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m])); }
-function initials(name){ return name.trim().split(/\s+/).slice(0,2).map(x=>x[0]).join("").toUpperCase(); }
+];
 
-function blankState(){
-  const agencies = [
-    ["Agence immobilière l'Adresse Châteaubriant","Châteaubriant","28 Rue Aristide Briand"],
-    ["AJP Immobilier Châteaubriant","Châteaubriant","40 Rue du 11 Novembre 1918"],
-    ["Saint Nicolas Immobilier","Châteaubriant","10 bis Rue Joseph Chapron"],
-    ["Orpi Provost Immobilier Châteaubriant","Châteaubriant","17 Bd Victor Hugo"],
-    ["Porte Neuve Immobilier","Châteaubriant","2 Rue Aristide Briand"],
-    ["CENTURY 21 Iméo à Châteaubriant","Châteaubriant","8 Pl. Saint-Nicolas"],
-    ["Square Habitat Châteaubriant","Châteaubriant","10 Pl. de la Motte"],
-    ["De Coquereaumont Immobilier","Châteaubriant","8 Bd Victor Hugo"],
-    ["Agence immobilière Laforêt Châteaubriant","Châteaubriant","1 Pl. de la Motte"],
-    ["Jerome Immobilier Châteaubriant","Châteaubriant","19 Bd Victor Hugo"],
-    ["Pacôme Briand - Agent immobilier","Châteaubriant","9 Rue Amand Franco"],
-    ["Georges-Henri NOMARI - Expert Immobilier","Châteaubriant","3 Rue Kléber"]
-  ].map(([name,city,address])=>({id:uid(),name,city,address,contact:"",phone:"",email:"",notes:"",visits:[],quotes:[]}));
 
-  const diagnosticians = [
-    ["LD2i - Diagnostic immobilier Châteaubriant","Châteaubriant","44 Rue des Anciens Combattants"],
-    ["Le Petit Diagnostiqueur","Erbray","4 Les Landelles"]
-  ].map(([name,city,address])=>({id:uid(),name,city,address,contact:"",phone:"",email:"",notes:"",visits:[],quotes:[]}));
+/* =========================================================
+ D OM    *
+ ========================================================= */
 
-  return {version:1, settings:{cardsStock:DEFAULT_CARDS}, agencies, diagnosticians};
+const $ = selector =>
+document.querySelector(selector);
+
+
+/* =========================================================
+ L OCAL S*TORAGE
+ ========================================================= */
+
+function loadUser() {
+
+  try {
+
+    return JSON.parse(
+      localStorage.getItem(STORAGE) || '{}'
+    );
+
+  } catch {
+
+    return {};
+  }
 }
-function loadState(){
-  try{
-    const raw=localStorage.getItem(KEY);
-    if(!raw) return blankState();
-    const s=JSON.parse(raw);
-    s.settings ||= {cardsStock:DEFAULT_CARDS};
-    s.agencies ||= []; s.diagnosticians ||= [];
-    // Migration : la première version pouvait avoir enregistré une base vide.
-    // Dans ce cas on charge la base initiale de prospection.
-    if(s.agencies.length===0 && s.diagnosticians.length===0){
-      const fresh=blankState();
-      fresh.settings.cardsStock = Number.isFinite(Number(s.settings.cardsStock)) ? Number(s.settings.cardsStock) : DEFAULT_CARDS;
-      return fresh;
+
+
+function saveLocalEvent(e) {
+
+  const user = loadUser();
+
+  user[e.id] = {
+    favorite: !!e.favorite,
+    contact: e.contact || 'todo',
+    flight: e.flight || 'unknown'
+  };
+
+  localStorage.setItem(
+    STORAGE,
+    JSON.stringify(user)
+  );
+}
+
+
+/* =========================================================
+ S UPABAS*E
+ ========================================================= */
+
+function supabaseHeaders(extra = {}) {
+
+  return {
+    apikey: SUPABASE_KEY,
+
+    Authorization:
+    `Bearer ${SUPABASE_KEY}`,
+
+    'Content-Type':
+    'application/json',
+
+    ...extra
+  };
+}
+
+
+/*
+ * Vérifie que Supabase répond.
+ */
+
+async function testSupabase() {
+
+  try {
+
+    const response = await fetch(
+      `${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}` +
+      `?select=event_id&user_id=eq.${encodeURIComponent(USER_ID)}` +
+      `&limit=1`,
+      {
+        method: 'GET',
+        headers: supabaseHeaders()
+      }
+    );
+
+    if (!response.ok) {
+
+      console.warn(
+        'Supabase indisponible:',
+        response.status,
+        await response.text()
+      );
+
+      return false;
     }
-    return s;
-  }catch(e){ return blankState(); }
-}
-function save(){ localStorage.setItem(KEY,JSON.stringify(state)); }
 
-function list(){ return state[currentTab]; }
-function statusInfo(p){
-  const last=p.visits?.[p.visits.length-1];
-  if(!last) return ["never","Jamais visité"];
-  return last.status==="accepted"?["accepted","Accord"]:last.status==="attention"?["attention","En attention"]:["refused","Refus"];
+    return true;
+
+  } catch (error) {
+
+    console.warn(
+      'Supabase inaccessible:',
+      error
+    );
+
+    return false;
+  }
 }
-function totals(){
-  const all=[...state.agencies,...state.diagnosticians];
-  const visits=all.reduce((n,p)=>n+(p.visits?.length||0),0);
-  const accepted=all.reduce((n,p)=>n+(p.visits||[]).filter(v=>v.status==="accepted").length,0);
-  const attention=all.reduce((n,p)=>n+(p.visits||[]).filter(v=>v.status==="attention").length,0);
-  const refused=all.reduce((n,p)=>n+(p.visits||[]).filter(v=>v.status==="refused").length,0);
-  const quotes=all.reduce((n,p)=>n+(p.quotes?.length||0),0);
-  const cards=all.reduce((n,p)=>n+(p.visits||[]).reduce((x,v)=>x+(Number(v.cardsGiven)||0),0),0);
-  return {all,visits,accepted,attention,refused,quotes,cards};
+
+
+/*
+ * Récupère toutes les données utilisateur.
+ */
+
+async function loadCloudUserData() {
+
+  try {
+
+    const response = await fetch(
+      `${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}` +
+      `?select=event_id,favorite,contact,flight,updated_at` +
+      `&user_id=eq.${encodeURIComponent(USER_ID)}`,
+                                 {
+                                   method: 'GET',
+                                   headers: supabaseHeaders()
+                                 }
+    );
+
+    if (!response.ok) {
+
+      throw new Error(
+        `HTTP ${response.status}: ` +
+        await response.text()
+      );
+    }
+
+    const rows =
+    await response.json();
+
+    return Array.isArray(rows)
+    ? rows
+    : [];
+
+  } catch (error) {
+
+    console.warn(
+      'Impossible de récupérer Supabase:',
+      error
+    );
+
+    return null;
+  }
 }
-function renderDashboard(){
-  const t=totals();
-  const tab=list();
-  $("dashboard").innerHTML=[
-    ["🏢",tab.length,currentTab==="agencies"?"Agences":"Diagnostiqueurs"],
-    ["📅",tab.reduce((n,p)=>n+(p.visits?.length||0),0),"Visites"],
-    ["🟢",tab.reduce((n,p)=>n+(p.visits||[]).filter(v=>v.status==="accepted").length,0),"Accords"],
-    ["🧾",tab.reduce((n,p)=>n+(p.quotes?.length||0),0),"Demandes de devis"],
-    ["🪪",state.settings.cardsStock,"Cartes restantes"]
-  ].map(x=>`<div class="stat"><div class="value">${x[0]} ${x[1]}</div><div class="label">${x[2]}</div></div>`).join("");
+
+
+/*
+ * Sauvegarde un événement dans Supabase.
+ *
+ * UPSERT :
+ * - crée si absent
+ * - modifie si présent
+ */
+
+async function saveCloudEvent(e) {
+
+  const payload = {
+
+    user_id: USER_ID,
+
+    event_id: String(e.id),
+
+    favorite: !!e.favorite,
+
+    contact:
+    e.contact || 'todo',
+
+    flight:
+    e.flight || 'unknown',
+
+    updated_at:
+    new Date().toISOString()
+  };
+
+
+  try {
+
+    const response = await fetch(
+      `${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}`,
+      {
+        method: 'POST',
+
+        headers: supabaseHeaders({
+          Prefer:
+          'resolution=merge-duplicates,return=minimal'
+        }),
+
+        body:
+        JSON.stringify(payload)
+      }
+    );
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        `HTTP ${response.status}: ` +
+        await response.text()
+      );
+    }
+
+
+    cloudReady = true;
+
+    return true;
+
+  } catch (error) {
+
+    cloudReady = false;
+
+    console.warn(
+      'Sauvegarde Supabase échouée:',
+      error
+    );
+
+    return false;
+  }
 }
-function renderCards(){
-  const q=$("search").value.trim().toLowerCase();
-  const filter=$("statusFilter").value;
-  let arr=list().filter(p=>{
-    const hay=[p.name,p.city,p.contact,p.phone,p.email].join(" ").toLowerCase();
-    if(q && !hay.includes(q)) return false;
-    const [st]=statusInfo(p);
-    if(filter==="never") return st==="never";
-    return filter==="all" || st===filter;
-  }).sort((a,b)=>a.name.localeCompare(b.name,"fr"));
-  if(!arr.length){
-    $("prospects").innerHTML=`<div class="empty">Aucun prospect dans cette vue.<br><br><button class="primary" onclick="openCreate()">＋ Ajouter un prospect</button></div>`;
+
+
+/* =========================================================
+ S YNCHRO*NISATION
+ ========================================================= */
+
+async function synchronizeUserData() {
+
+  /*
+   * Évite plusieurs synchronisations simultanées.
+   */
+
+  if (cloudSyncPromise) {
+    return cloudSyncPromise;
+  }
+
+
+  cloudSyncPromise =
+  (async () => {
+
+    const local =
+    loadUser();
+
+
+    const remote =
+    await loadCloudUserData();
+
+
+    /*
+     * Supabase inaccessible :
+     * on continue avec le cache local.
+     */
+
+    if (remote === null) {
+
+      cloudReady = false;
+
+      return;
+    }
+
+
+    cloudReady = true;
+
+
+    /*
+     * Conversion des données distantes.
+     */
+
+    const remoteUser = {};
+
+    for (const row of remote) {
+
+      remoteUser[row.event_id] = {
+
+        favorite:
+        !!row.favorite,
+
+        contact:
+        row.contact || 'todo',
+
+        flight:
+        row.flight || 'unknown'
+      };
+    }
+
+
+    /*
+     * On commence avec les données locales.
+     */
+
+    const merged = {
+      ...local
+    };
+
+
+    /*
+     * Les données présentes dans Supabase
+     * sont prioritaires.
+     */
+
+    for (const [id, state] of Object.entries(
+      remoteUser
+    )) {
+
+      merged[id] = state;
+    }
+
+
+    /*
+     * Mise à jour locale.
+     */
+
+    localStorage.setItem(
+      STORAGE,
+      JSON.stringify(merged)
+    );
+
+
+    /*
+     * Application immédiate aux événements.
+     */
+
+    events = events.map(e => {
+
+      const state =
+      merged[e.id];
+
+      if (!state) {
+        return e;
+      }
+
+      return {
+        ...e,
+
+        favorite:
+        !!state.favorite,
+
+        contact:
+        state.contact ||
+        'todo',
+
+        flight:
+        state.flight ||
+        'unknown'
+      };
+    });
+
+
+    /*
+     * Migration automatique :
+     *
+     * Les données qui existaient seulement
+     * dans localStorage sont envoyées
+     * vers Supabase.
+     */
+
+    const remoteIds =
+    new Set(
+      remote.map(row =>
+      String(row.event_id)
+      )
+    );
+
+
+    const localEntries =
+    Object.entries(local);
+
+
+    for (const [eventId, state] of localEntries) {
+
+      if (remoteIds.has(String(eventId))) {
+        continue;
+      }
+
+
+      await saveCloudEvent({
+
+        id: eventId,
+
+        favorite:
+        !!state.favorite,
+
+        contact:
+        state.contact ||
+        'todo',
+
+        flight:
+        state.flight ||
+        'unknown'
+      });
+    }
+
+
+    learningCache = null;
+    potentialCache.clear();
+
+  })()
+  .finally(() => {
+
+    cloudSyncPromise = null;
+  });
+
+
+  return cloudSyncPromise;
+}
+
+
+/* =========================================================
+ S AUVEGA*RDE UTILISATEUR
+ ========================================================= */
+
+async function saveEventState(e) {
+
+  /*
+   * Sauvegarde locale immédiate.
+   * L'interface n'attend pas Internet.
+   */
+
+  saveLocalEvent(e);
+
+  learningCache = null;
+  potentialCache.clear();
+
+
+  /*
+   * Sauvegarde distante en arrière-plan.
+   */
+
+  if (cloudReady) {
+
+    saveCloudEvent(e);
+
+  } else {
+
+    /*
+     * Si Supabase n'était pas disponible,
+     * on retente.
+     */
+
+    const available =
+    await testSupabase();
+
+    if (available) {
+
+      cloudReady = true;
+
+      await saveCloudEvent(e);
+    }
+  }
+}
+
+
+/* =========================================================
+ T EXTE  *
+ ========================================================= */
+
+function normalizeText(value) {
+
+  return String(value || '')
+  .toLowerCase()
+  .normalize('NFD')
+  .replace(
+    /[\u0300-\u036f]/g,
+    ''
+  )
+  .replace(
+    /[^a-z0-9\s-]/g,
+    ' '
+  )
+  .replace(
+    /\s+/g,
+    ' '
+  )
+  .trim();
+}
+
+
+function categoryKey(e) {
+
+  return normalizeText(
+    e.category ||
+    'sans categorie'
+  );
+}
+
+
+function meaningfulWords(e) {
+
+  return normalizeText(
+    `${e.title || ''} ${e.category || ''}`
+  )
+  .split(' ')
+  .filter(word =>
+  word.length >= 5 &&
+  ![
+    'evenement',
+    'evenements',
+    'animation',
+    'animations',
+    'locale',
+    'locales',
+    'festival',
+    'association',
+    'associations'
+  ].includes(word)
+  );
+}
+
+
+/* =========================================================
+ D ATE   *
+ ========================================================= */
+
+function fmtDate(date) {
+
+  const x =
+  new Date(
+    String(date || '') +
+    'T12:00:00'
+  );
+
+
+  if (isNaN(x)) {
+
+    return String(
+      date ||
+      'Date inconnue'
+    );
+  }
+
+
+  return x.toLocaleDateString(
+    'fr-FR',
+    {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'long'
+    }
+  );
+}
+
+
+/* =========================================================
+ E TAT UT*ILISATEUR
+ ========================================================= */
+
+function applyUserState(list) {
+
+  const user =
+  loadUser();
+
+
+  return list.map(e => {
+
+    const state =
+    user[e.id] ||
+    {};
+
+
+    return {
+
+      ...e,
+
+      favorite:
+      !!state.favorite,
+
+      contact:
+      state.contact ||
+      e.contact ||
+      'todo',
+
+      flight:
+      state.flight ||
+      e.flight ||
+      'unknown'
+    };
+  });
+}
+
+
+/* =========================================================
+ D EDOUBL*ONNAGE
+ ========================================================= */
+
+function eventDuplicateKey(e) {
+
+  return normalizeText(
+
+    [
+      e.title,
+      e.date,
+      e.startTime,
+      e.place,
+      e.address
+    ]
+    .filter(Boolean)
+    .join('|')
+
+  );
+}
+
+
+function deduplicateEvents(list) {
+
+  const seen =
+  new Set();
+
+  const result =
+  [];
+
+
+  for (const event of list) {
+
+    const key =
+    eventDuplicateKey(event);
+
+
+    if (!key) {
+
+      result.push(event);
+
+      continue;
+    }
+
+
+    if (seen.has(key)) {
+      continue;
+    }
+
+
+    seen.add(key);
+
+    result.push(event);
+  }
+
+
+  return result;
+}
+
+
+/* =========================================================
+ F ALLBAC*K
+ ========================================================= */
+
+function mergeFallback(list) {
+
+  const existingKeys =
+  new Set(
+    list.map(eventDuplicateKey)
+  );
+
+
+  const additions =
+  fallback.filter(
+    event =>
+    !existingKeys.has(
+      eventDuplicateKey(event)
+    )
+  );
+
+
+  return deduplicateEvents([
+    ...list,
+    ...additions
+  ]);
+}
+
+
+/* =========================================================
+ A PPRENT*ISSAGE
+ ========================================================= */
+
+function learning() {
+
+  if (learningCache) {
+    return learningCache;
+  }
+
+
+  const category =
+  Object.create(null);
+
+  const words =
+  Object.create(null);
+
+
+  for (const e of events) {
+
+    if (!e.favorite) {
+      continue;
+    }
+
+
+    const categoryName =
+    categoryKey(e);
+
+
+    category[categoryName] =
+    (category[categoryName] || 0) + 1;
+
+
+    const uniqueWords =
+    new Set(
+      meaningfulWords(e)
+    );
+
+
+    for (const word of uniqueWords) {
+
+      words[word] =
+      (words[word] || 0) + 1;
+    }
+  }
+
+
+  learningCache = {
+    category,
+    words
+  };
+
+
+  return learningCache;
+}
+
+
+/* =========================================================
+ P OTENTI*EL
+ ========================================================= */
+
+function potentialLevel(e) {
+
+  if (
+    potentialCache.has(e.id)
+  ) {
+
+    return potentialCache.get(
+      e.id
+    );
+  }
+
+
+  const learned =
+  learning();
+
+
+  let level = 0;
+
+
+  /*
+   * ★★★ appris automatiquement
+   */
+
+  if (
+    (
+      learned.category[
+        categoryKey(e)
+      ] || 0
+    ) >= LEARN_THRESHOLD
+  ) {
+
+    level = 3;
+  }
+
+
+  if (level < 3) {
+
+    for (
+      const word of meaningfulWords(e)
+    ) {
+
+      if (
+        (
+          learned.words[word] || 0
+        ) >= LEARN_THRESHOLD
+      ) {
+
+        level = 3;
+
+        break;
+      }
+    }
+  }
+
+
+  /*
+   * ★★ potentiel fourni par la source
+   */
+
+  if (level < 3) {
+
+    if (
+      e.dronePotential === 'high' ||
+      Number(e.droneScore || 0) >= 6
+    ) {
+
+      level = 2;
+
+    } else if (
+      e.dronePotential === 'medium' ||
+      Number(e.droneScore || 0) >= 3
+    ) {
+
+      level = 1;
+    }
+  }
+
+
+  potentialCache.set(
+    e.id,
+    level
+  );
+
+
+  return level;
+}
+
+
+function potentialLabel(level) {
+
+  return [
+    '☆ Faible potentiel',
+    '★ Potentiel',
+    '★★ Potentiel élevé',
+    '★★★ Très haut potentiel'
+  ][level];
+}
+
+
+function potentialClass(level) {
+
+  return [
+    'low',
+    'medium',
+    'high',
+    'very-high'
+  ][level];
+}
+
+
+/* =========================================================
+ S TATUT *VOL
+ ========================================================= */
+
+function statusLabel(e) {
+
+  return {
+
+    unknown:
+    '🚁 Non vérifié',
+
+    asked:
+    '🟠 Autorisation demandée',
+
+    accepted:
+    '🟢 Vol accepté',
+
+    refused:
+    '🔴 Vol refusé'
+
+  }[
+    e.flight
+  ] || '🚁 Non vérifié';
+}
+
+
+/* =========================================================
+ C ONTACT*
+ ========================================================= */
+
+function isToContact(e) {
+
+  return (
+    !!e.favorite &&
+    e.contact !== 'contacted'
+  );
+}
+
+
+function isPotential(e) {
+
+  return (
+    potentialLevel(e) >= 1
+  );
+}
+
+
+/* =========================================================
+ F ILTRE *RAPIDE
+ ========================================================= */
+
+function quickFilter(filter) {
+
+  const select =
+  $('#statusFilter');
+
+
+  if (!select) {
     return;
   }
-  $("prospects").innerHTML=arr.map(p=>{
-    const [st,label]=statusInfo(p);
-    const visits=p.visits?.length||0;
-    const cards=(p.visits||[]).reduce((n,v)=>n+(Number(v.cardsGiven)||0),0);
-    const quotes=p.quotes?.length||0;
-    const last=p.visits?.length ? p.visits[p.visits.length-1].date : null;
-    return `<article class="prospect-card" onclick="openDetails('${p.id}')">
-      <div class="card-head">
-        <div class="avatar">${esc(initials(p.name))}</div>
-        <div class="card-title"><h2>${esc(p.name)}</h2><p class="city">${esc(p.city||"Autour de Châteaubriant")}</p></div>
-        <span class="status-pill status-${st}">${label}</span>
-      </div>
-      <div class="card-metrics">
-        <span>📅 <b>${visits}</b> visite${visits>1?"s":""}</span>
-        <span>🪪 <b>${cards}</b> carte${cards>1?"s":""}</span>
-        <span>🧾 <b>${quotes}</b> devis</span>
-      </div>
-      <div class="card-footer"><span class="last-visit">${last?"Dernière visite : "+fmtDate(last):"Pas encore visité"}</span><button class="details-btn">Détails →</button></div>
-    </article>`;
-  }).join("");
-}
-function render(){ renderDashboard(); renderCards(); }
 
-function openCreate(){
-  currentId=null;
-  $("modalType").textContent=currentTab==="agencies"?"Nouvelle agence immobilière":"Nouveau diagnostiqueur";
-  $("modalTitle").textContent="Ajouter un prospect";
-  $("modalLocation").textContent="Autour de Châteaubriant";
-  $("modalBody").innerHTML=`
-    <div class="detail-section"><div class="form-grid">
-      <div class="field full"><label>Nom *</label><input id="f_name" autofocus></div>
-      <div class="field"><label>Ville</label><input id="f_city" value="Châteaubriant"></div>
-      <div class="field"><label>Contact</label><input id="f_contact"></div>
-      <div class="field"><label>Téléphone</label><input id="f_phone"></div>
-      <div class="field"><label>E-mail</label><input id="f_email" type="email"></div>
-      <div class="field full"><label>Adresse / notes</label><textarea id="f_notes"></textarea></div>
-    </div></div>
-    <div class="detail-section"><div class="row"><button class="primary" onclick="saveProspect()">Créer le prospect</button><button class="secondary" onclick="closeModal()">Annuler</button></div></div>`;
-  showModal();
-}
-function saveProspect(){
-  const name=$("f_name").value.trim();
-  if(!name){ toast("Le nom est obligatoire"); return; }
-  list().push({id:uid(),name,city:$("f_city").value.trim(),contact:$("f_contact").value.trim(),phone:$("f_phone").value.trim(),email:$("f_email").value.trim(),notes:$("f_notes").value.trim(),visits:[],quotes:[]});
-  save(); closeModal(); render(); toast("Prospect ajouté");
-}
-function openDetails(id){
-  currentId=id;
-  const p=list().find(x=>x.id===id); if(!p) return;
-  const [st,label]=statusInfo(p);
-  $("modalType").textContent=currentTab==="agencies"?"Agence immobilière":"Diagnostiqueur immobilier";
-  $("modalTitle").textContent=p.name;
-  $("modalLocation").textContent=[p.city,p.contact].filter(Boolean).join(" · ")||"Autour de Châteaubriant";
-  const totalGiven=(p.visits||[]).reduce((n,v)=>n+(Number(v.cardsGiven)||0),0);
-  const quotes=p.quotes||[];
-  $("modalBody").innerHTML=`
-    <div class="detail-section"><h3>Vue d'ensemble</h3>
-      <div class="detail-stats">
-        <div class="detail-stat"><b>${p.visits.length}</b><span>visites</span></div>
-        <div class="detail-stat"><b>${totalGiven}</b><span>cartes données</span></div>
-        <div class="detail-stat"><b>${quotes.length}</b><span>demandes de devis</span></div>
-      </div>
-    </div>
-    <div class="detail-section"><h3>Coordonnées</h3>
-      <div class="muted">${esc(p.contact||"Contact non renseigné")}</div>
-      <div class="muted">${esc(p.phone||"Téléphone non renseigné")}</div>
-      <div class="muted">${esc(p.email||"E-mail non renseigné")}</div>
-      <div class="muted">${esc(p.notes||"Aucune note")}</div>
-      <div class="row" style="margin-top:10px"><button class="secondary" onclick="editProspect()">Modifier</button><button class="danger" onclick="deleteProspect()">Supprimer</button></div>
-    </div>
-    <div class="detail-section"><h3>Nouvelle visite</h3>
-      <div class="form-grid">
-        <div class="field"><label>Date de visite</label><input id="v_date" type="date" value="${today()}"></div>
-        <div class="field"><label>Résultat</label><select id="v_status"><option value="accepted">🟢 Accord</option><option value="attention" selected>🟠 En attention</option><option value="refused">🔴 Refus</option></select></div>
-        <div class="field"><label>Cartes de visite laissées</label><input id="v_cards" type="number" min="0" value="0"></div>
-        <div class="field full"><label>Compte rendu</label><textarea id="v_note" placeholder="Ce qui a été dit, prochaine relance…"></textarea></div>
-      </div>
-      <div class="row" style="margin-top:10px"><button class="primary" onclick="addVisit()">Enregistrer la visite</button></div>
-    </div>
-    <div class="detail-section"><h3>Historique des visites</h3>
-      <div class="timeline">${p.visits.length ? p.visits.slice().reverse().map((v,i)=>`<div class="timeline-item ${v.status}">
-        <div class="timeline-top"><b>${fmtDate(v.date)} — ${v.status==="accepted"?"Accord":v.status==="attention"?"En attention":"Refus"}</b><span>${Number(v.cardsGiven)||0} carte(s)</span></div>
-        <div class="timeline-meta">${esc(v.note||"Aucun compte rendu")}</div>
-      </div>`).join("") : '<span class="muted">Aucune visite enregistrée.</span>'}</div>
-    </div>
-    <div class="detail-section"><h3>Demandes de devis <span class="muted">(${quotes.length})</span></h3>
-      <div class="form-grid">
-        <div class="field"><label>Date de la demande</label><input id="q_date" type="date" value="${today()}"></div>
-        <div class="field"><label>Montant estimé (€) — facultatif</label><input id="q_amount" type="number" min="0" step="0.01"></div>
-        <div class="field full"><label>Objet / note</label><input id="q_note" placeholder="Ex. photos immobilières maison 180 m²"></div>
-      </div>
-      <div class="row" style="margin-top:10px"><button class="primary" onclick="addQuote()">＋ Enregistrer une demande de devis</button></div>
-      <div class="timeline" style="margin-top:10px">${quotes.length ? quotes.slice().reverse().map(q=>`<div class="timeline-item accepted"><div class="timeline-top"><b>${fmtDate(q.date)}</b><span>${q.amount?Number(q.amount).toLocaleString("fr-FR",{minimumFractionDigits:0,maximumFractionDigits:2})+" €":"Montant non renseigné"}</span></div><div class="timeline-meta">${esc(q.note||"Demande de devis")}</div></div>`).join("") : '<span class="muted">Aucune demande de devis.</span>'}</div>
-    </div>`;
-  showModal();
-}
-function addVisit(){
-  const p=list().find(x=>x.id===currentId); if(!p) return;
-  const cards=Math.max(0,Number($("v_cards").value)||0);
-  if(cards>state.settings.cardsStock){toast("Pas assez de cartes en stock");return;}
-  p.visits.push({id:uid(),date:$("v_date").value||today(),status:$("v_status").value,cardsGiven:cards,note:$("v_note").value.trim()});
-  state.settings.cardsStock-=cards; save(); render(); openDetails(currentId); toast("Visite enregistrée");
-}
-function addQuote(){
-  const p=list().find(x=>x.id===currentId); if(!p) return;
-  p.quotes.push({id:uid(),date:$("q_date").value||today(),amount:Number($("q_amount").value)||0,note:$("q_note").value.trim()});
-  save(); render(); openDetails(currentId); toast("Demande de devis enregistrée");
-}
-function editProspect(){
-  const p=list().find(x=>x.id===currentId); if(!p)return;
-  $("modalBody").innerHTML=`<div class="detail-section"><div class="form-grid">
-    <div class="field full"><label>Nom</label><input id="e_name" value="${esc(p.name)}"></div>
-    <div class="field"><label>Ville</label><input id="e_city" value="${esc(p.city||"")}"></div>
-    <div class="field"><label>Contact</label><input id="e_contact" value="${esc(p.contact||"")}"></div>
-    <div class="field"><label>Téléphone</label><input id="e_phone" value="${esc(p.phone||"")}"></div>
-    <div class="field"><label>E-mail</label><input id="e_email" value="${esc(p.email||"")}"></div>
-    <div class="field full"><label>Notes</label><textarea id="e_notes">${esc(p.notes||"")}</textarea></div>
-  </div></div><div class="detail-section"><div class="row"><button class="primary" onclick="saveEdit()">Enregistrer</button><button class="secondary" onclick="openDetails('${p.id}')">Annuler</button></div></div>`;
-}
-function saveEdit(){
-  const p=list().find(x=>x.id===currentId); if(!p)return;
-  p.name=$("e_name").value.trim()||p.name;p.city=$("e_city").value.trim();p.contact=$("e_contact").value.trim();p.phone=$("e_phone").value.trim();p.email=$("e_email").value.trim();p.notes=$("e_notes").value.trim();
-  save();render();openDetails(currentId);toast("Prospect modifié");
-}
-function deleteProspect(){
-  const p=list().find(x=>x.id===currentId);if(!p)return;
-  if(!confirm(`Supprimer ${p.name} et tout son historique ?`))return;
-  state[currentTab]=state[currentTab].filter(x=>x.id!==currentId);save();closeModal();render();toast("Prospect supprimé");
-}
-function showModal(){ $("modal").classList.remove("hidden"); $("modal").setAttribute("aria-hidden","false"); }
-function closeModal(){ $("modal").classList.add("hidden"); $("modal").setAttribute("aria-hidden","true"); currentId=null; }
-function toast(msg){const t=$("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1800)}
 
-document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{
-  currentTab=b.dataset.tab;document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x===b));
-  $("search").value="";$("statusFilter").value="all";render();
-}));
-$("search").addEventListener("input",renderCards);
-$("statusFilter").addEventListener("change",renderCards);
-$("addBtn").addEventListener("click",openCreate);
-$("stockBtn").addEventListener("click",()=>{
-  const value=prompt("Combien de cartes de visite te reste-t-il ?", String(state.settings.cardsStock));
-  if(value===null)return;
-  const n=parseInt(value,10);
-  if(Number.isNaN(n)||n<0){toast("Valeur invalide");return;}
-  state.settings.cardsStock=n;save();render();toast("Stock de cartes mis à jour");
-});
-$("closeModal").addEventListener("click",closeModal);
-document.querySelector(".modal-backdrop").addEventListener("click",closeModal);
+  select.value =
+  filter;
 
-$("exportBtn").addEventListener("click",()=>{
-  const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
-  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="prospection-drone-backup.json";a.click();URL.revokeObjectURL(a.href);
-  toast("Sauvegarde exportée");
-});
-$("importBtn").addEventListener("click",()=>$("importFile").click());
-$("importFile").addEventListener("change",e=>{
-  const f=e.target.files[0];if(!f)return;
-  const r=new FileReader();r.onload=()=>{
-    try{
-      const s=JSON.parse(r.result);
-      if(!Array.isArray(s.agencies)||!Array.isArray(s.diagnosticians))throw Error();
-      state=s;state.settings ||= {cardsStock:DEFAULT_CARDS};save();render();toast("Sauvegarde importée");
-    }catch(_){alert("Fichier de sauvegarde invalide.");}
-    e.target.value="";
-  };r.readAsText(f);
-});
 
-if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+  render();
+}
+
+
+/* =========================================================
+ C HARGEM*ENT EVENTS.JSON
+ ========================================================= */
+
+async function refresh() {
+
+  const updated =
+  $('#updated');
+
+
+  if (updated) {
+
+    updated.textContent =
+    '🔄 Actualisation…';
+  }
+
+
+  try {
+
+    const response =
+    await fetch(
+      './events.json?ts=' +
+      Date.now(),
+                {
+                  cache: 'no-store'
+                }
+    );
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        'HTTP ' +
+        response.status
+      );
+    }
+
+
+    const data =
+    await response.json();
+
+
+    let list =
+    Array.isArray(data.events)
+    ? data.events
+    : [];
+
+
+    /*
+     * Suppression des doublons
+     */
+
+    list =
+    deduplicateEvents(list);
+
+
+    /*
+     * Ajout des événements locaux
+     */
+
+    list =
+    mergeFallback(list);
+
+
+    /*
+     * Application du cache local
+     */
+
+    events =
+    applyUserState(list);
+
+
+    learningCache = null;
+    potentialCache.clear();
+
+
+    if (updated) {
+
+      updated.textContent =
+      `✓ ${DISPLAY_EVENT_COUNT} événements · Mise à jour à ${DISPLAY_UPDATE_TIME}`;
+    }
+
+
+    /*
+     * Affichage immédiatement.
+     */
+
+    render();
+
+
+    /*
+     * Synchronisation cloud
+     * sans bloquer l'affichage.
+     */
+
+    synchronizeUserData()
+    .then(() => {
+
+      render();
+
+    })
+    .catch(error => {
+
+      console.warn(
+        'Synchronisation:',
+        error
+      );
+    });
+
+
+  } catch (error) {
+
+    console.error(
+      'Erreur chargement events.json:',
+      error
+    );
+
+
+    events =
+    applyUserState(
+      deduplicateEvents(
+        fallback
+      )
+    );
+
+
+    learningCache = null;
+    potentialCache.clear();
+
+
+    if (updated) {
+
+      updated.textContent =
+      '⚠️ events.json indisponible · données locales';
+    }
+
+
+    render();
+
+
+    /*
+     * Même en fallback, on tente
+     * de récupérer les données cloud.
+     */
+
+    synchronizeUserData()
+    .then(() => render())
+    .catch(() => {});
+  }
+}
+
+
+/* =========================================================
+ R ENDU  *
+ ========================================================= */
+
+function render() {
+
+  const distanceElement =
+  $('#distance');
+
+  const filterElement =
+  $('#statusFilter');
+
+
+  if (
+    !distanceElement ||
+    !filterElement
+  ) {
+
+    return;
+  }
+
+
+  const max =
+  Number(
+    distanceElement.value
+  );
+
+
+  const filter =
+  filterElement.value;
+
+
+  /*
+   * Reconstruction du cache potentiel.
+   */
+
+  learningCache = null;
+  potentialCache.clear();
+
+
+  /*
+   * Calcul une seule fois.
+   */
+
+  for (const e of events) {
+
+    potentialLevel(e);
+  }
+
+
+  /*
+   * Distance
+   */
+
+  let list =
+  events.filter(
+    e =>
+    Number(e.distance) <= max
+  );
+
+
+  /*
+   * Filtres
+   */
+
+  switch (filter) {
+
+    case 'potential':
+
+      list =
+      list.filter(
+        e =>
+        potentialLevel(e) >= 1
+      );
+
+      break;
+
+
+    case 'high':
+
+      list =
+      list.filter(
+        e =>
+        potentialLevel(e) === 2
+      );
+
+      break;
+
+
+    case 'very-high':
+
+      list =
+      list.filter(
+        e =>
+        potentialLevel(e) === 3
+      );
+
+      break;
+
+
+    case 'medium':
+
+      list =
+      list.filter(
+        e =>
+        potentialLevel(e) === 1
+      );
+
+      break;
+
+
+    case 'outdoor':
+
+      list =
+      list.filter(
+        e => e.outdoor
+      );
+
+      break;
+
+
+    case 'fav':
+
+      list =
+      list.filter(
+        e => e.favorite
+      );
+
+      break;
+
+
+    case 'todo':
+
+      list =
+      list.filter(
+        isToContact
+      );
+
+      break;
+
+
+    case 'contacted':
+
+      list =
+      list.filter(
+        e =>
+        e.contact === 'contacted'
+      );
+
+      break;
+
+
+    case 'accepted':
+
+      list =
+      list.filter(
+        e =>
+        e.flight === 'accepted'
+      );
+
+      break;
+
+
+    case 'refused':
+
+      list =
+      list.filter(
+        e =>
+        e.flight === 'refused'
+      );
+
+      break;
+  }
+
+
+  /*
+   * Tri
+   */
+
+  list.sort(
+    (a, b) => {
+
+      const dateA =
+      new Date(
+        `${a.date || '9999-12-31'}T${
+          a.startTime || '00:00'
+        }`
+      );
+
+
+      const dateB =
+      new Date(
+        `${b.date || '9999-12-31'}T${
+          b.startTime || '00:00'
+        }`
+      );
+
+
+      return (
+        dateA - dateB ||
+        potentialLevel(b) -
+        potentialLevel(a) ||
+        Number(a.distance || 0) -
+        Number(b.distance || 0)
+      );
+    }
+  );
+
+
+  /*
+   * Statistiques
+   */
+
+  const within =
+  events.filter(
+    e =>
+    Number(e.distance) <= max
+  );
+
+
+  const quick = [
+
+    [
+      'all',
+      '📅',
+      within.length
+    ],
+
+    [
+      'outdoor',
+      '🚁',
+      within.filter(
+        e => e.outdoor
+      ).length
+    ],
+
+    [
+      'potential',
+      '★',
+      within.filter(
+        e =>
+        potentialLevel(e) >= 1
+      ).length
+    ],
+
+    [
+      'high',
+      '★★',
+      within.filter(
+        e =>
+        potentialLevel(e) === 2
+      ).length
+    ],
+
+    [
+      'very-high',
+      '★★★',
+      within.filter(
+        e =>
+        potentialLevel(e) === 3
+      ).length
+    ],
+
+    [
+      'fav',
+      '⭐',
+      within.filter(
+        e => e.favorite
+      ).length
+    ],
+
+    [
+      'todo',
+      '📞',
+      within.filter(
+        isToContact
+      ).length
+    ]
+  ];
+
+
+  const stats =
+  $('#stats');
+
+
+  if (stats) {
+
+    stats.innerHTML =
+    quick.map(
+      item => `
+      <button
+      type="button"
+      class="stat ${
+        filter === item[0]
+        ? 'active'
+        : ''
+      }"
+      data-filter="${item[0]}"
+      >
+      <span class="stat-icon">
+      ${item[1]}
+      </span>
+
+      <span>
+      ${item[2]}
+      </span>
+      </button>
+      `
+    ).join('');
+
+
+    stats
+    .querySelectorAll('.stat')
+    .forEach(button => {
+
+      button.onclick =
+      () => {
+
+        quickFilter(
+          button.dataset.filter
+        );
+      };
+    });
+  }
+
+
+  /*
+   * Liste
+   */
+
+  const box =
+  $('#events');
+
+
+  if (!box) {
+    return;
+  }
+
+
+  box.innerHTML = '';
+
+
+  if (!list.length) {
+
+    box.textContent =
+    'Aucun événement avec ces filtres.';
+
+  return;
+  }
+
+
+  const template =
+  $('#eventTemplate');
+
+
+  if (!template) {
+
+    console.error(
+      'eventTemplate introuvable'
+    );
+
+    return;
+  }
+
+
+  const fragment =
+  document.createDocumentFragment();
+
+
+  for (const e of list) {
+
+    const node =
+    template.content.cloneNode(
+      true
+    );
+
+
+    const level =
+    potentialLevel(e);
+
+
+    /*
+     * DATE
+     */
+
+    const date =
+    node.querySelector(
+      '.date'
+    );
+
+
+    if (date) {
+
+      date.textContent =
+      fmtDate(e.date) +
+      (
+        e.startTime
+        ? ' · ' +
+        e.startTime
+        : ''
+      );
+    }
+
+
+    /*
+     * TITRE
+     */
+
+    const title =
+    node.querySelector(
+      '.title'
+    );
+
+
+    if (title) {
+
+      title.textContent =
+      e.title ||
+      'Événement';
+    }
+
+
+    /*
+     * LIEU
+     */
+
+    const place =
+    node.querySelector(
+      '.place'
+    );
+
+
+    if (place) {
+
+      place.textContent =
+      '📍 ' +
+      (e.place || '') +
+      (
+        e.address
+        ? ' — ' +
+        e.address
+        : ''
+      );
+    }
+
+
+    /*
+     * DESCRIPTION
+     */
+
+    const description =
+    node.querySelector(
+      '.description'
+    );
+
+
+    if (description) {
+
+      description.textContent =
+      e.description ||
+      '';
+    }
+
+
+    /*
+     * DISTANCE
+     */
+
+    const distance =
+    node.querySelector(
+      '.distance-badge'
+    );
+
+
+    if (distance) {
+
+      distance.textContent =
+      `${e.distance} km`;
+    }
+
+
+    /*
+     * POTENTIEL
+     */
+
+    const potential =
+    node.querySelector(
+      '.potential-badge'
+    );
+
+
+    if (potential) {
+
+      potential.textContent =
+      potentialLabel(
+        level
+      );
+
+
+      potential.className =
+      'potential-badge ' +
+      potentialClass(
+        level
+      );
+    }
+
+
+    /*
+     * EXTÉRIEUR
+     */
+
+    const outdoor =
+    node.querySelector(
+      '.outdoor-badge'
+    );
+
+
+    if (outdoor) {
+
+      outdoor.textContent =
+      e.outdoor
+      ? '🚁 Extérieur'
+      : '🏠 Intérieur';
+    }
+
+
+    /*
+     * CONTACT
+     */
+
+    const contactBadge =
+    node.querySelector(
+      '.contact-badge'
+    );
+
+
+    if (contactBadge) {
+
+      contactBadge.textContent =
+      e.contact === 'contacted'
+      ? '📞 Contacté'
+      : '📞 À contacter';
+    }
+
+
+    /*
+     * VOL
+     */
+
+    const flightBadge =
+    node.querySelector(
+      '.flight-badge'
+    );
+
+
+    if (flightBadge) {
+
+      flightBadge.textContent =
+      statusLabel(e);
+    }
+
+
+    /*
+     * FAVORI
+     */
+
+    const favorite =
+    node.querySelector(
+      '.fav'
+    );
+
+
+    if (favorite) {
+
+      favorite.textContent =
+      e.favorite
+      ? '★'
+      : '☆';
+
+
+      favorite.classList.toggle(
+        'active',
+        e.favorite
+      );
+
+
+      favorite.onclick =
+      async () => {
+
+        e.favorite =
+        !e.favorite;
+
+
+        /*
+         * Sauvegarde locale immédiate.
+         */
+
+        saveLocalEvent(e);
+
+
+        /*
+         * Invalidation apprentissage.
+         */
+
+        learningCache = null;
+        potentialCache.clear();
+
+
+        /*
+         * On rafraîchit immédiatement.
+         */
+
+        render();
+
+
+        /*
+         * Puis cloud en arrière-plan.
+         */
+
+        await saveEventState(
+          e
+        );
+      };
+    }
+
+
+    /*
+     * CONTACT
+     */
+
+    const contact =
+    node.querySelector(
+      '.contact'
+    );
+
+
+    if (contact) {
+
+      contact.onclick =
+      async () => {
+
+        e.contact =
+        e.contact ===
+        'contacted'
+        ? 'todo'
+        : 'contacted';
+
+
+        saveLocalEvent(e);
+
+
+        render();
+
+
+        await saveEventState(
+          e
+        );
+      };
+    }
+
+
+    /*
+     * VOL
+     */
+
+    const flight =
+    node.querySelector(
+      '.flight'
+    );
+
+
+    if (flight) {
+
+      flight.onclick =
+      async () => {
+
+        const states = [
+          'unknown',
+          'asked',
+          'accepted',
+          'refused'
+        ];
+
+
+        const index =
+        states.indexOf(
+          e.flight
+        );
+
+
+        e.flight =
+        states[
+          (index + 1) %
+          states.length
+        ];
+
+
+        saveLocalEvent(e);
+
+
+        render();
+
+
+        await saveEventState(
+          e
+        );
+      };
+    }
+
+
+    /*
+     * DETAILS
+     */
+
+    const details =
+    node.querySelector(
+      '.details'
+    );
+
+
+    if (details) {
+
+      details.onclick =
+      () => {
+
+        const reasons =
+        Array.isArray(
+          e.droneReasons
+        )
+        ? e.droneReasons.join(
+          ', '
+        )
+        : '';
+
+
+        alert(
+
+          `${e.title || 'Événement'}\n` +
+
+          `${e.place || ''}` +
+
+          (
+            e.address
+            ? ` — ${e.address}`
+            : ''
+          ) +
+
+          `\n` +
+
+          `${fmtDate(e.date)}` +
+
+          (
+            e.startTime
+            ? ` · ${e.startTime}`
+            : ''
+          ) +
+
+          `\n\n` +
+
+          `Potentiel drone : ` +
+
+          `${potentialLabel(level)} ` +
+
+          `(${e.droneScore || 0}/10)\n` +
+
+          (
+            reasons
+            ? `Indices : ${reasons}\n`
+            : ''
+          ) +
+
+          (
+            e.outdoor
+            ? 'Événement extérieur\n'
+            : 'Événement intérieur\n'
+          ) +
+
+          `Contact : ` +
+
+          (
+            e.contact ===
+            'contacted'
+            ? 'Contacté'
+            : 'À contacter'
+          ) +
+
+          `\n` +
+
+          `Drone : ${e.flight}` +
+
+          (
+            e.phone
+            ? `\nTéléphone : ${e.phone}`
+            : ''
+          ) +
+
+          (
+            e.email
+            ? `\nEmail : ${e.email}`
+            : ''
+          ) +
+
+          (
+            e.url
+            ? `\n\n${e.url}`
+            : ''
+          )
+        );
+      };
+    }
+
+
+    fragment.appendChild(
+      node
+    );
+  }
+
+
+  /*
+   * Un seul ajout au DOM.
+   */
+
+  box.appendChild(
+    fragment
+  );
+}
+
+
+/* =========================================================
+ C ONTROL*ES
+ ========================================================= */
+
+const distanceElement =
+$('#distance');
+
+
+if (distanceElement) {
+
+  distanceElement.onchange =
+  render;
+}
+
+
+const statusElement =
+$('#statusFilter');
+
+
+if (statusElement) {
+
+  statusElement.onchange =
+  render;
+}
+
+
+const refreshButton =
+$('#refresh');
+
+
+if (refreshButton) {
+
+  refreshButton.onclick =
+  refresh;
+}
+
+
+/* =========================================================
+ S ERVICE* WORKER
+ ========================================================= */
+
+if (
+  'serviceWorker' in navigator
+) {
+
+  navigator.serviceWorker
+  .register('sw.js')
+  .catch(error => {
+
+    console.warn(
+      'Service Worker :',
+      error
+    );
+  });
+}
+
+
+/* =========================================================
+ D EMARRA*GE
+ ========================================================= */
+
 render();
 
-window.openDetails=openDetails;window.openCreate=openCreate;window.closeModal=closeModal;window.saveProspect=saveProspect;window.addVisit=addVisit;window.addQuote=addQuote;window.editProspect=editProspect;window.saveEdit=saveEdit;window.deleteProspect=deleteProspect;
+/*
+ * Chargement des événements.
+ * La synchronisation Supabase est lancée
+ * automatiquement par refresh().
+ */
+
+refresh();

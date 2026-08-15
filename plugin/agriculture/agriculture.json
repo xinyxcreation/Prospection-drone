@@ -1,0 +1,79 @@
+{
+  "version": 4,
+  "sector": "Châteaubriant · Loire-Atlantique",
+  "prospectionLeadMonths": 1,
+  "activities": [
+    {
+      "id": "cereales",
+      "type": "🌾 Moissons",
+      "harvestStart": "2026-07-05",
+      "harvestEnd": "2026-08-10",
+      "interest": 3,
+      "explanation": "La période précédant la moisson peut être intéressante pour proposer une recherche préventive de faune avant le passage des engins. Les dates restent indicatives.",
+      "sectors": [
+        "Châteaubriant",
+        "Loire-Atlantique"
+      ]
+    },
+    {
+      "id": "colza",
+      "type": "🟡 Colza",
+      "harvestStart": "2026-06-25",
+      "harvestEnd": "2026-07-20",
+      "interest": 2,
+      "explanation": "La récolte du colza intervient généralement avant les moissons. La période précédant la récolte peut constituer une fenêtre de prospection.",
+      "sectors": [
+        "Châteaubriant",
+        "Loire-Atlantique"
+      ]
+    },
+    {
+      "id": "mais-fourrage",
+      "type": "🌽 Maïs fourrage",
+      "harvestStart": "2026-09-15",
+      "harvestEnd": "2026-10-15",
+      "interest": 3,
+      "explanation": "La récolte du maïs fourrage implique le passage d'engins dans les parcelles. Une prospection préalable peut être proposée lorsque la récolte approche.",
+      "sectors": [
+        "Châteaubriant",
+        "Loire-Atlantique"
+      ]
+    },
+    {
+      "id": "mais-grain",
+      "type": "🌽 Maïs grain",
+      "harvestStart": "2026-10-01",
+      "harvestEnd": "2026-11-15",
+      "interest": 3,
+      "explanation": "La récolte du maïs grain peut s'étendre en automne. La fenêtre de prospection doit rester indicative.",
+      "sectors": [
+        "Châteaubriant",
+        "Loire-Atlantique"
+      ]
+    },
+    {
+      "id": "tournesol",
+      "type": "🌻 Tournesol",
+      "harvestStart": "2026-09-15",
+      "harvestEnd": "2026-10-15",
+      "interest": 2,
+      "explanation": "La récolte du tournesol intervient généralement en fin d'été ou début d'automne. Une prospection peut être envisagée lorsque la récolte approche.",
+      "sectors": [
+        "Châteaubriant",
+        "Loire-Atlantique"
+      ]
+    },
+    {
+      "id": "fauche",
+      "type": "🌱 Fauche / ensilage",
+      "harvestStart": "2026-05-15",
+      "harvestEnd": "2026-09-15",
+      "interest": 2,
+      "explanation": "Les périodes de fauche sont variables et peuvent se répéter dans l'année. La prospection doit être rapprochée de la date réelle de fauche.",
+      "sectors": [
+        "Châteaubriant",
+        "Loire-Atlantique"
+      ]
+    }
+  ]
+}
