@@ -17,7 +17,27 @@ function esc(s=""){ return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&l
 function initials(name){ return name.trim().split(/\s+/).slice(0,2).map(x=>x[0]).join("").toUpperCase(); }
 
 function blankState(){
-  return {version:1, settings:{cardsStock:DEFAULT_CARDS}, agencies:[], diagnosticians:[]};
+  const agencies = [
+    ["Agence immobilière l'Adresse Châteaubriant","Châteaubriant","28 Rue Aristide Briand"],
+    ["AJP Immobilier Châteaubriant","Châteaubriant","40 Rue du 11 Novembre 1918"],
+    ["Saint Nicolas Immobilier","Châteaubriant","10 bis Rue Joseph Chapron"],
+    ["Orpi Provost Immobilier Châteaubriant","Châteaubriant","17 Bd Victor Hugo"],
+    ["Porte Neuve Immobilier","Châteaubriant","2 Rue Aristide Briand"],
+    ["CENTURY 21 Iméo à Châteaubriant","Châteaubriant","8 Pl. Saint-Nicolas"],
+    ["Square Habitat Châteaubriant","Châteaubriant","10 Pl. de la Motte"],
+    ["De Coquereaumont Immobilier","Châteaubriant","8 Bd Victor Hugo"],
+    ["Agence immobilière Laforêt Châteaubriant","Châteaubriant","1 Pl. de la Motte"],
+    ["Jerome Immobilier Châteaubriant","Châteaubriant","19 Bd Victor Hugo"],
+    ["Pacôme Briand - Agent immobilier","Châteaubriant","9 Rue Amand Franco"],
+    ["Georges-Henri NOMARI - Expert Immobilier","Châteaubriant","3 Rue Kléber"]
+  ].map(([name,city,address])=>({id:uid(),name,city,address,contact:"",phone:"",email:"",notes:"",visits:[],quotes:[]}));
+
+  const diagnosticians = [
+    ["LD2i - Diagnostic immobilier Châteaubriant","Châteaubriant","44 Rue des Anciens Combattants"],
+    ["Le Petit Diagnostiqueur","Erbray","4 Les Landelles"]
+  ].map(([name,city,address])=>({id:uid(),name,city,address,contact:"",phone:"",email:"",notes:"",visits:[],quotes:[]}));
+
+  return {version:1, settings:{cardsStock:DEFAULT_CARDS}, agencies, diagnosticians};
 }
 function loadState(){
   try{
@@ -212,6 +232,13 @@ document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{
 $("search").addEventListener("input",renderCards);
 $("statusFilter").addEventListener("change",renderCards);
 $("addBtn").addEventListener("click",openCreate);
+$("stockBtn").addEventListener("click",()=>{
+  const value=prompt("Combien de cartes de visite te reste-t-il ?", String(state.settings.cardsStock));
+  if(value===null)return;
+  const n=parseInt(value,10);
+  if(Number.isNaN(n)||n<0){toast("Valeur invalide");return;}
+  state.settings.cardsStock=n;save();render();toast("Stock de cartes mis à jour");
+});
 $("closeModal").addEventListener("click",closeModal);
 document.querySelector(".modal-backdrop").addEventListener("click",closeModal);
 
