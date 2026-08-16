@@ -2113,17 +2113,3 @@ render();
  */
 
 refresh();
-
-const el=document.getElementById("eventsUpdateTime");
-  if(!el)return;
-  try{
-    const r=await fetch("events.json",{method:"HEAD",cache:"no-store"});
-    const lm=r.headers.get("Last-Modified");
-    if(lm){
-      el.textContent=new Date(lm).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
-      return;
-    }
-  }catch(e){}
-  el.textContent=new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
-}
-
