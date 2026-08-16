@@ -28,3 +28,5 @@
 @media(max-width:700px){
   .event-main-filters{grid-template-columns:1fr 1fr !important}
 }
+
+.event-search-wrap{display:block!important;width:100%!important;margin-top:8px!important}.event-search{width:100%!important}

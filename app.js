@@ -6,7 +6,7 @@
 
 const STORAGE = 'events-drone-user-v5';
 const DISPLAY_EVENT_COUNT = 6620;
-const DISPLAY_UPDATE_TIME = '12:48';
+const DISPLAY_UPDATE_TIME = null;
 
 const SUPABASE_URL =
 'https://bqfeuzynjeofcwqqlcgw.supabase.co';
@@ -23,6 +23,16 @@ const USER_ID =
 const LEARN_THRESHOLD = 3;
 
 let events = [];
+
+function getSyncLabel(){
+  const t=localStorage.getItem("lastSync");
+  if(!t) return "en cours";
+  return new Date(t).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
+}
+function markSync(){
+  localStorage.setItem("lastSync", new Date().toISOString());
+}
+
 
 let learningCache = null;
 let potentialCache = new Map();
@@ -1045,6 +1055,7 @@ function quickFilter(filter) {
  ========================================================= */
 
 async function refresh() {
+  markSync();
 
   const updated =
   $('#updated');
@@ -1119,7 +1130,7 @@ async function refresh() {
     if (updated) {
 
       updated.textContent =
-      `✓ ${DISPLAY_EVENT_COUNT} événements · Mise à jour à ${DISPLAY_UPDATE_TIME}`;
+      `✓ ${DISPLAY_EVENT_COUNT} événements · Mise à jour à ${getSyncLabel()}`;
     }
 
 
@@ -2113,14 +2124,3 @@ render();
  */
 
 refresh();
-
-\nfunction updateSyncTimes(){
- const t=localStorage.getItem("lastSyncTime");
- const v=t?new Date(t).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}):"--:--";
- document.querySelectorAll(".sync-time").forEach(e=>e.textContent=v);
-}
-function markSyncTime(){
- localStorage.setItem("lastSyncTime",new Date().toISOString());
- updateSyncTimes();
-}
-window.addEventListener("load",updateSyncTimes);

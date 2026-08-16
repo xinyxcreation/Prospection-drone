@@ -277,13 +277,3 @@ async function init(c,newType='agencies'){
 
 return {init,home,setType:newType=>{type=newType;if(container)home(container)},get data(){return data},LAST_UPDATE};
 })();
-\nfunction updateSyncTimes(){
- const t=localStorage.getItem("lastSyncTime");
- const v=t?new Date(t).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}):"--:--";
- document.querySelectorAll(".sync-time").forEach(e=>e.textContent=v);
-}
-function markSyncTime(){
- localStorage.setItem("lastSyncTime",new Date().toISOString());
- updateSyncTimes();
-}
-window.addEventListener("load",updateSyncTimes);

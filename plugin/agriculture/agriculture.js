@@ -100,14 +100,3 @@ function openActivity(id,c){
 
 return{load,render,renderHome,init,openActivity,getCurrentAgriculture,get data(){return data}};
 })();
-
-\nfunction updateSyncTimes(){
- const t=localStorage.getItem("lastSyncTime");
- const v=t?new Date(t).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}):"--:--";
- document.querySelectorAll(".sync-time").forEach(e=>e.textContent=v);
-}
-function markSyncTime(){
- localStorage.setItem("lastSyncTime",new Date().toISOString());
- updateSyncTimes();
-}
-window.addEventListener("load",updateSyncTimes);
