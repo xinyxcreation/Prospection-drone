@@ -48,7 +48,7 @@ function totalCardsGiven(){
 }
 function stock(){
   const u=loadUser();
-  return Number(u.__stock??data.cardsInitial??500);
+  return Number(u.__stock??500);
 }
 function setStock(n){
   const u=loadUser();u.__stock=Math.max(0,Math.floor(Number(n)||0));saveUser(u);
