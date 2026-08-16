@@ -2114,8 +2114,7 @@ render();
 
 refresh();
 
-async function updateEventsTimestamp(){
-  const el=document.getElementById("eventsUpdateTime");
+const el=document.getElementById("eventsUpdateTime");
   if(!el)return;
   try{
     const r=await fetch("events.json",{method:"HEAD",cache:"no-store"});
@@ -2127,4 +2126,4 @@ async function updateEventsTimestamp(){
   }catch(e){}
   el.textContent=new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
 }
-window.addEventListener("load",updateEventsTimestamp);
+
