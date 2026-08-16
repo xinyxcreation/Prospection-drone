@@ -669,7 +669,7 @@ select:focus{
 
   <div>
     <h1>Prospection Drone</h1>
-    <small id="updated">Mise à jour à 12:48</small>
+    <small id="updated">Mise à jour à <span id="eventsUpdateTime">--:--</span></small>
   </div>
 
   <button id="refresh" title="Actualiser">↻</button>
@@ -730,16 +730,21 @@ select:focus{
   <section class="module-intro-card">
     <div class="module-intro-title"><span>📅</span><div><strong>Événements</strong></div></div>
     <div class="module-intro-location event-main-filters">📍 Rayon de prospection · Châteaubriant</div>
+</section>
 
-  <div class="event-search-wrap"><span>⌕</span><input id="eventSearch" class="event-search" type="search" placeholder="Rechercher un événement…" aria-label="Rechercher un événement"></div>
+  <div class="event-filters-block">
+  <div class="event-filter-row">
+    <label>
+      Distance
 
-    
-
-  
-  </section>
-
-  <section class="filters event-main-filters">
-
+      <select id="distance">
+        <option value="10" selected>10 km</option>
+        <option value="20">20 km</option>
+        <option value="30">30 km</option>
+        <option value="50">50 km</option>
+        <option value="100">100 km</option>
+      </select>
+    </label>
     <label>
       Distance
 
@@ -806,8 +811,12 @@ select:focus{
       </select>
 
     </label>
-
-  </section>
+  </div>
+  <div class="event-search-wrap">
+    <span>⌕</span>
+    <input id="eventSearch" class="event-search" type="search" placeholder="Rechercher un événement…" aria-label="Rechercher un événement">
+  </div>
+</div>
 
 
   <section
@@ -960,8 +969,8 @@ select:focus{
     const updated = document.getElementById('updated');
     if(!updated) return;
     updated.textContent = mode === 'events'
-      ? '✓ 6620 événements · Mise à jour à 12:48'
-      : 'Mise à jour à 12:48';
+      ? '✓ 6620 événements · Mise à jour à <span id="eventsUpdateTime">--:--</span>'
+      : 'Mise à jour à <span id="eventsUpdateTime">--:--</span>';
   }
 
   function showEvents(){
