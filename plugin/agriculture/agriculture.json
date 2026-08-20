@@ -15,7 +15,7 @@
         "Loire-Atlantique"
       ],
       "daturaRisk": "🟠 Modéré",
-      "daturaPeriod": "juin → septembre"
+      "daturaPeriod": "août → septembre"
     },
     {
       "id": "colza",
@@ -29,7 +29,7 @@
         "Loire-Atlantique"
       ],
       "daturaRisk": "🟢 Faible",
-      "daturaPeriod": "juin → septembre"
+      "daturaPeriod": "août → septembre"
     },
     {
       "id": "mais-fourrage",
@@ -43,7 +43,7 @@
         "Loire-Atlantique"
       ],
       "daturaRisk": "🔴 Fort",
-      "daturaPeriod": "juin → octobre"
+      "daturaPeriod": "août → octobre"
     },
     {
       "id": "mais-grain",
@@ -57,7 +57,7 @@
         "Loire-Atlantique"
       ],
       "daturaRisk": "🔴 Fort",
-      "daturaPeriod": "juin → octobre"
+      "daturaPeriod": "août → novembre"
     },
     {
       "id": "tournesol",
@@ -71,7 +71,7 @@
         "Loire-Atlantique"
       ],
       "daturaRisk": "🔴 Fort",
-      "daturaPeriod": "juin → octobre"
+      "daturaPeriod": "août → octobre"
     },
     {
       "id": "fauche",
@@ -85,7 +85,7 @@
         "Loire-Atlantique"
       ],
       "daturaRisk": "🟠 Modéré",
-      "daturaPeriod": "juin → septembre"
+      "daturaPeriod": "août → septembre"
     }
   ]
 }
