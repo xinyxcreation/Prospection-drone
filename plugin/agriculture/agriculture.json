@@ -13,9 +13,7 @@
       "sectors": [
         "Châteaubriant",
         "Loire-Atlantique"
-      ],
-      "daturaRisk": "🟠 Modéré",
-      "daturaPeriod": "août → septembre"
+      ]
     },
     {
       "id": "colza",
@@ -27,9 +25,7 @@
       "sectors": [
         "Châteaubriant",
         "Loire-Atlantique"
-      ],
-      "daturaRisk": "🟢 Faible",
-      "daturaPeriod": "août → septembre"
+      ]
     },
     {
       "id": "mais-fourrage",
@@ -41,9 +37,7 @@
       "sectors": [
         "Châteaubriant",
         "Loire-Atlantique"
-      ],
-      "daturaRisk": "🔴 Fort",
-      "daturaPeriod": "août → octobre"
+      ]
     },
     {
       "id": "mais-grain",
@@ -55,9 +49,7 @@
       "sectors": [
         "Châteaubriant",
         "Loire-Atlantique"
-      ],
-      "daturaRisk": "🔴 Fort",
-      "daturaPeriod": "août → novembre"
+      ]
     },
     {
       "id": "tournesol",
@@ -69,9 +61,7 @@
       "sectors": [
         "Châteaubriant",
         "Loire-Atlantique"
-      ],
-      "daturaRisk": "🔴 Fort",
-      "daturaPeriod": "août → octobre"
+      ]
     },
     {
       "id": "fauche",
@@ -83,9 +73,7 @@
       "sectors": [
         "Châteaubriant",
         "Loire-Atlantique"
-      ],
-      "daturaRisk": "🟠 Modéré",
-      "daturaPeriod": "août → septembre"
+      ]
     }
   ]
 }
