@@ -958,12 +958,22 @@ select:focus{
     Object.values(tabs).forEach(x => x.classList.remove('active'));
   }
 
+  function getStoredSyncLabel(){
+    const t = localStorage.getItem('lastSync');
+    if(!t) return 'en cours';
+    const d = new Date(t);
+    return Number.isNaN(d.getTime())
+      ? 'en cours'
+      : d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  }
+
   function updateHeader(mode){
     const updated = document.getElementById('updated');
     if(!updated) return;
-    updated.textContent = mode === 'events'
-      ? '✓ 6620 événements · Mise à jour à <span id="syncTime">en cours</span>'
-      : 'Mise à jour à <span id="syncTime">en cours</span>';
+    const label = getStoredSyncLabel();
+    updated.innerHTML = mode === 'events'
+      ? `✓ 6620 événements · Mise à jour à <span id="syncTime">${label}</span>`
+      : `Mise à jour à <span id="syncTime">${label}</span>`;
   }
 
   function showEvents(){
